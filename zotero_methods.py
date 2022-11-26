@@ -22,6 +22,7 @@ parser.add_argument("--debug", action="store_true")
 def _copy_item_data_to_path(item: Dict) -> None:
     filename = item["data"]["filename"]
     path_to_file = os.path.join(LOCAL_ZOTERO_PATH, item["key"], filename)
+    print(f"Moving file {filename} to {ZOTERO_PDFS_PATH}")
     shutil.copy(path_to_file, ZOTERO_PDFS_PATH)
 
 def _create_linked_file(zotero_instance, item: Dict, debug: bool) -> None:
@@ -30,6 +31,7 @@ def _create_linked_file(zotero_instance, item: Dict, debug: bool) -> None:
     item_template["title"] = filename
     item_template["path"] = f"attachments:{filename}"
     if not debug:
+        print(f"Creating linked item in Zotero for {filename}")
         zotero_instance.create_items([item_template], parentid=item["key"])
 
 def update_item(
@@ -42,6 +44,8 @@ def update_item(
 
     if "linkMode" in item["data"]:
         if item["data"]["linkMode"] == "imported_url":
+
+            print(f"Configuring item {item['key']}")
             
             parent_id = item["data"].get("parentItem")
             if parent_id is not None:
@@ -49,6 +53,7 @@ def update_item(
                 
                 # delete item
                 if not debug:
+                    print(f"Removing file {item['key']}: {item['data']['filename']}")
                     zotero_instance.delete_item(item)
 
                 aux_info_entry = {"filename": item["data"]["filename"]}
@@ -57,6 +62,8 @@ def update_item(
                 parent_keys.add(parent_id)
         
         elif item["data"]["linkMode"] == "linked_file":
+
+            print(f"Item {item['key']} already configured")
             parent_id = item["data"]["parentItem"]
             aux_info[parent_id] = None
 
@@ -114,10 +121,7 @@ if __name__ == "__main__":
     parent_keys = set()
     item_index = 0
 
-    print(grouped_items.keys())
-    print([i["key"] for i in recent_items])
-    while len(parent_keys) <= args.num_items:
-        print(len(parent_keys), parent_keys)
+    while len(parent_keys) < args.num_items + 1:
         aux_info, parent_keys = update_item(
             zotero_instance=zot,
             item=recent_items[item_index],
@@ -126,3 +130,5 @@ if __name__ == "__main__":
             debug=args.debug
         )
         item_index += 1
+    
+    print("Complete!")

@@ -45,7 +45,7 @@ def update_item(
     if "linkMode" in item["data"]:
         if item["data"]["linkMode"] == "imported_url":
 
-            print(f"Configuring item {item['key']}")
+            print(f"Configuring item {item['key']}: {item['data']['filename']}")
             
             parent_id = item["data"].get("parentItem")
             if parent_id is not None:
@@ -117,18 +117,18 @@ if __name__ == "__main__":
     recent_items = zot.items(limit=BUFFER * args.num_items)
     grouped_items = _group_items(recent_items)
 
+    num_items_ungrouped = sum([len(k) for k in grouped_items.values()][:args.num_items])
+
     aux_info = {}
     parent_keys = set()
-    item_index = 0
 
-    while len(parent_keys) < args.num_items + 1:
+    for item in recent_items[:num_items_ungrouped]:
         aux_info, parent_keys = update_item(
             zotero_instance=zot,
-            item=recent_items[item_index],
+            item=item,
             aux_info=aux_info,
             parent_keys=parent_keys,
             debug=args.debug
         )
-        item_index += 1
     
     print("Complete!")

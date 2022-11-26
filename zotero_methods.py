@@ -11,6 +11,8 @@ API_KEY = "V5aS5zoDzicBTbujbxeM4OZn"
 LOCAL_ZOTERO_PATH = "/Users/sebastianlee/Zotero/storage"
 ZOTERO_PDFS_PATH = "/Users/sebastianlee/Dropbox/Zotero"
 
+BUFFER = 5
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--num_items", type=int, default=5)
@@ -104,15 +106,18 @@ if __name__ == "__main__":
     # we now have a Zotero object, zot, and access to all its methods
     zot = zotero.Zotero(LIBRARY_ID, 'user', API_KEY)
 
-    # note this method call will include items in the bin
-    recent_items = zot.items(limit=2 * args.num_items)
+    # note this method call will include items in the bin.
+    recent_items = zot.items(limit=BUFFER * args.num_items)
     grouped_items = _group_items(recent_items)
 
     aux_info = {}
     parent_keys = set()
     item_index = 0
 
-    while len(parent_keys) < args.num_items:
+    print(grouped_items.keys())
+    print([i["key"] for i in recent_items])
+    while len(parent_keys) <= args.num_items:
+        print(len(parent_keys), parent_keys)
         aux_info, parent_keys = update_item(
             zotero_instance=zot,
             item=recent_items[item_index],
